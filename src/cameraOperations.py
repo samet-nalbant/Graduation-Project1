@@ -7,7 +7,10 @@ import re
 import time
 
 def findLastVideoNumber():
-    videoDirectoryPath = "observations"
+    videoDirectoryPath = "../observations"
+    if os.path.exists("../observations") == False:
+        os.mkdir("../observations")
+
     numberList = []
     for path in os.listdir(videoDirectoryPath):
         if os.path.isfile(os.path.join(videoDirectoryPath, path)):
@@ -46,9 +49,10 @@ class ROSImageViewer:
         image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         if self.isFirstCall:
             self.isFirstCall = False
-            videoPath = "observations/video" + str(findLastVideoNumber())+".mp4"
+            videoPath = "../observations/video" + str(findLastVideoNumber())+".mp4"
             writer = cv2.VideoWriter(videoPath, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), 20, (image.shape[1], image.shape[0]))
         else:
             writer.write(image)
-        cv2.imshow('image', image)
+        resized = cv2.resize(image, (1024,720), interpolation = cv2.INTER_AREA)
+        cv2.imshow('image', resized)
         cv2.waitKey(1)    

@@ -100,23 +100,25 @@ def calculateErrorRate(df, longtitudes, altitudes):
 
 def showGraph(isMultipleVehicle):
     latitudes, longtitudes, altitudes, positions = readPositionLogFile("positions")
-    df = readNEDPositions()
-
-    fig, ax = plt.subplots(2,1)
-
-    min_lon = min(longtitudes)
-    max_lon = max(longtitudes)
-    min_alt = min(altitudes)
-    max_alt = max(altitudes)
-
-    ax[0].plot(df['E'], df['D'], label='E-D')
-    ax[1].set_xlim(min_lon, max_lon)
-    ax[1].set_ylim(min_alt, max_alt)
-    ax[1].scatter(longtitudes, altitudes, marker='o', color='r', zorder=2, s=1)
-
-    print("is multiple vehicle?: {}".format(isMultipleVehicle))
-    if isMultipleVehicle:
-        pass
-    else:
+    if isMultipleVehicle == False:
+        df = readNEDPositions()
+        fig, ax = plt.subplots(2,1)
+        min_lon = min(longtitudes)
+        max_lon = max(longtitudes)
+        min_alt = min(altitudes)
+        max_alt = max(altitudes)
         calculateErrorRate(df, longtitudes, altitudes)
+        ax[0].plot(df['E'], df['D'], label='E-D')
+        ax[1].set_xlim(min_lon, max_lon)
+        ax[1].set_ylim(min_alt, max_alt)
+        ax[1].scatter(longtitudes, altitudes, marker='o', color='r', zorder=2, s=1)
+    else:
+        fig, ax = plt.subplots()
+        min_lon = min(longtitudes)
+        max_lon = max(longtitudes)
+        min_alt = min(altitudes)
+        max_alt = max(altitudes)
+        ax.set_xlim(min_lon, max_lon)
+        ax.set_ylim(min_alt, max_alt)
+        ax.scatter(longtitudes, altitudes, marker='o', color='r', s=1)
     plt.show()
