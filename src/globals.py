@@ -4,3 +4,6 @@ positionNorth = 0
 positionDown = 0
 isWritedToFile = False
 isMultipleVehicle = False
+simulationTime = 0
+missionStartTime = 0
+missionDuration = 0

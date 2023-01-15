@@ -90,12 +90,12 @@ def calculateErrorRate(df, longtitudes, altitudes):
     print("Correlation coefficient:", corr)
 
     print("altitude difference: {}".format((float(max_alt)-float(min_alt))/2))
-    fig, ax = plt.subplots(2,1)
-    ax[0].plot(df['E'], df['D'], label='E-D')
-    ax[1].set_xlim(min_lon, max_lon)
-    ax[1].set_ylim(min_alt, max_alt)
-    ax[1].scatter(adjustedLongtitudes, adjustedAltitudes, marker='o', color='r', zorder=2, s=1)
-    plt.show()
+    # fig, ax = plt.subplots(2,1)
+    # ax[0].plot(df['E'], df['D'], label='E-D')
+    # ax[1].set_xlim(min_lon, max_lon)
+    # ax[1].set_ylim(min_alt, max_alt)
+    # ax[1].scatter(adjustedLongtitudes, adjustedAltitudes, marker='o', color='r', zorder=2, s=1)
+    # plt.show()
     #findRadius(positions)
 
 def showGraph(isMultipleVehicle):
@@ -107,11 +107,12 @@ def showGraph(isMultipleVehicle):
         max_lon = max(longtitudes)
         min_alt = min(altitudes)
         max_alt = max(altitudes)
-        calculateErrorRate(df, longtitudes, altitudes)
         ax[0].plot(df['E'], df['D'], label='E-D')
         ax[1].set_xlim(min_lon, max_lon)
         ax[1].set_ylim(min_alt, max_alt)
         ax[1].scatter(longtitudes, altitudes, marker='o', color='r', zorder=2, s=1)
+        calculateErrorRate(df, longtitudes, altitudes)
+
     else:
         fig, ax = plt.subplots()
         min_lon = min(longtitudes)
@@ -122,3 +123,4 @@ def showGraph(isMultipleVehicle):
         ax.set_ylim(min_alt, max_alt)
         ax.scatter(longtitudes, altitudes, marker='o', color='r', s=1)
     plt.show()
+    exit()

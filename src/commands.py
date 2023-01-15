@@ -8,6 +8,7 @@ import rospy
 from cameraOperations import ROSImageViewer
 from mavsdk.offboard import (OffboardError, VelocityNedYaw)
 import globals
+from gazebo_msgs.srv import GetPhysicsProperties
 
 class DroneType(Enum):
     
@@ -106,7 +107,10 @@ async def makeTrajectory(drone, amplitude, direction, missionDuration, takeoffAl
     globals.positionDown = -takeoffAltitude
     yaw = 0.0
     isFirstCall = True
-    start_time = time.time()
+    if globals.isMultipleVehicle:
+        globals.missionStartTime = globals.simulationTime
+    else:
+        globals.missionStartTime = time.time()
     elapsed_time = 0
     positionYaw = 300.0
     print("Mission started")
@@ -126,7 +130,7 @@ async def makeTrajectory(drone, amplitude, direction, missionDuration, takeoffAl
                 globals.positionEast = offSetY + dronePosition.y
                 globals.positionDown = -takeoffAltitude - dronePosition.x
         else:
-            elapsed_time = time.time() - start_time  # in seconds
+            print(elapsed_time)
             if eightTrajectoryGenerator(amplitude, frequency, elapsed_time, dronePosition) == True:
                 count = count +1
             if(direction == TrajectoryDirection.X):
@@ -137,7 +141,10 @@ async def makeTrajectory(drone, amplitude, direction, missionDuration, takeoffAl
                 globals.positionNorth = offSetX
                 globals.positionEast = offSetY + dronePosition.y
                 globals.positionDown = -takeoffAltitude - dronePosition.x
-
+        if globals.isMultipleVehicle:
+            elapsed_time = globals.simulationTime - globals.missionStartTime  # in seconds
+        else:
+            elapsed_time = time.time() - globals.missionStartTime
         await drone.offboard.set_position_ned(PositionNedYaw(globals.positionNorth, globals.positionEast, globals.positionDown, positionYaw))
     await stopOffBoardMode(drone)
     globals.isTrajectoryStarted = False
@@ -153,7 +160,7 @@ async def print_position(drone):
     if globals.isMultipleVehicle:
         with open("positions", "w+") as f:
             async for position in drone.telemetry.position():
-                print(position)
+                #print(position)
                 f.write(position.__str__() + "\n")
     else:
         with open("positions", "w+") as f:
@@ -162,7 +169,7 @@ async def print_position(drone):
                 f2.truncate()
                 async for position in drone.telemetry.position():
                     if globals.isTrajectoryStarted:
-                        print(position)
+                        #print(position)
                         string = str(globals.positionNorth) + "," + str(globals.positionEast) + "," + str(globals.positionDown) + "\n"
                         f.write(position.__str__() + "\n")
                         f2.write(string)
