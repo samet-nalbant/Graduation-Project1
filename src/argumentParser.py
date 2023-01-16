@@ -26,12 +26,6 @@ class MissionAmplitudeAction(argparse.Action):
             raise ValueError("Mission amplitude must be bigger than 0!")
         setattr(namespace, self.dest, values)
 
-class MissionAmplitudeAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        if values <=0:
-            raise ValueError("Mission amplitude must be bigger than 0!")
-        setattr(namespace, self.dest, values)
-
 class MissionDirectionAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if values.upper() != "X" and values.upper() != "Y":

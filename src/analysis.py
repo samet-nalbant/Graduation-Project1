@@ -8,7 +8,7 @@ from geopy.distance import geodesic
 import pandas as pd
 from scipy.stats import pearsonr
 from scipy.spatial.distance import directed_hausdorff
-
+import globals
 def findRadius(flight_data):
     # using Ramer-Douglas-Peucker algorithm
     flight_data.remove(flight_data[0])
@@ -82,14 +82,18 @@ def calculateErrorRate(df, longtitudes, altitudes):
     print("Error rate:", error)
     true_value = df[['E', 'D']].values
     predicted_value = np.column_stack((adjustedLongtitudes, adjustedAltitudes))
+    #true_value.sort()
+    #predicted_value.sort()
     error = np.sqrt(np.mean((true_value - predicted_value)**2))
-    error_rate = (error / true_value.mean()) * 10
+    error_rate = (error / true_value.mean()) * 100
     print("Error rate: {:.3f}%".format(error_rate))
 
     corr, _ = pearsonr(perfect_eight_data.flatten(), eight_shape_data.flatten())
     print("Correlation coefficient:", corr)
 
-    print("altitude difference: {}".format((float(max_alt)-float(min_alt))/2))
+    print("altitude difference: {}".format((float(max_alt)-float(min_alt))))
+    print("amplitude difference: {}".format((float(max_alt)-float(min_alt))/2))
+    print("amplitude: {}".format(globals.missionAmplitude))
     # fig, ax = plt.subplots(2,1)
     # ax[0].plot(df['E'], df['D'], label='E-D')
     # ax[1].set_xlim(min_lon, max_lon)
@@ -111,7 +115,7 @@ def showGraph(isMultipleVehicle):
         ax[1].set_xlim(min_lon, max_lon)
         ax[1].set_ylim(min_alt, max_alt)
         ax[1].scatter(longtitudes, altitudes, marker='o', color='r', zorder=2, s=1)
-        calculateErrorRate(df, longtitudes, altitudes)
+        #calculateErrorRate(df, longtitudes, altitudes)
 
     else:
         fig, ax = plt.subplots()

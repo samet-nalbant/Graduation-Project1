@@ -7,3 +7,4 @@ isMultipleVehicle = False
 simulationTime = 0
 missionStartTime = 0
 missionDuration = 0
+missionAmplitude = 0

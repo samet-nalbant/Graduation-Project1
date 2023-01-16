@@ -5,7 +5,7 @@ from cv_bridge import CvBridge
 import os
 import re
 import time
-
+import globals
 def findLastVideoNumber():
     videoDirectoryPath = "../observations"
     if os.path.exists("../observations") == False:
@@ -30,7 +30,7 @@ class ROSImageViewer:
     start_time,elapsed_time, observationDuration = 0, 0, 0
     def __init__(self, observationDuration):
         print("initialization")
-        self.start_time = time.time()
+        self.start_time = globals.simulationTime
         self.observationDuration = observationDuration
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber('/iris_opt_flow_0/c920/image_raw', Image, self.image_callback)
@@ -38,9 +38,9 @@ class ROSImageViewer:
         
     def image_callback(self, msg):
         global writer
-        self.elapsed_time = time.time() - self.start_time  # in seconds
+        self.elapsed_time = globals.simulationTime - self.start_time  # in seconds
         print(self.elapsed_time)
-        if self.elapsed_time > self.observationDuration:
+        if self.elapsed_time > self.observationDuration-5:
             time.sleep(1)  # add a delay of 1 second
             self.image_sub.unregister()
             cv2.destroyAllWindows()
@@ -53,6 +53,6 @@ class ROSImageViewer:
             writer = cv2.VideoWriter(videoPath, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), 20, (image.shape[1], image.shape[0]))
         else:
             writer.write(image)
-        resized = cv2.resize(image, (1024,720), interpolation = cv2.INTER_AREA)
+        resized = cv2.resize(image, (800,600), interpolation = cv2.INTER_AREA)
         cv2.imshow('image', resized)
         cv2.waitKey(1)    

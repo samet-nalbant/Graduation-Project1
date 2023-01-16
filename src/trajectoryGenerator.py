@@ -19,7 +19,7 @@ def eightTrajectoryGenerator(amplitude, frequency, timeFromTrajectoryStart, dron
     #position.z = amplitude * (1 - np.cos(2 * theta))
     dronePosition.yaw = 0
     #print(np.mod(theta, 2 * np.pi))
-    if round(np.mod(theta, 2 * np.pi),3) == 0.000:
+    if round(np.mod(theta, 2 * np.pi),4) == 0.0000:
         return True
     else:
         return False

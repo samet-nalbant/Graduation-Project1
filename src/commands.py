@@ -39,7 +39,6 @@ async def connect(droneType, vehicleCount):
             port = 50040
     drone = System(mavsdk_server_address="0.0.0.0", port=port)
     await drone.connect(mavlinkAdress)
-    print(drone._port)
     print("Waiting for drone to connect...")
     async for state in drone.core.connection_state():
         if state.is_connected:
@@ -66,7 +65,6 @@ async def takeoff(drone, altitude):
     print("Taking off...")
     await drone.action.set_takeoff_altitude(altitude)
     await drone.action.takeoff()
-    await asyncio.sleep(5)
 
 async def land(drone):
     print("Landing...")
@@ -78,8 +76,8 @@ async def getGroundSpeed(drone):
     async for speed in drone.telemetry.ground_speed_ned():
         return speed
 
-async def setOffBoardMode(drone):
-    await drone.offboard.set_position_ned(PositionNedYaw(0.0, 0.0, 0.0, 300.0))
+async def setOffBoardMode(drone, takeoffAltitude):
+    await drone.offboard.set_position_ned(PositionNedYaw(0.0, 0.0, -takeoffAltitude, 0))
     print("-- Starting offboard")
     try:
         await drone.offboard.start()
@@ -97,7 +95,7 @@ async def stopOffBoardMode(drone):
         print(f"Stopping offboard mode failed with error code: {error._result.result}")
 
 async def makeTrajectory(drone, amplitude, direction, missionDuration, takeoffAltitude):
-    await setOffBoardMode(drone)
+    await setOffBoardMode(drone, takeoffAltitude)
     dronePosition = Position(0, 0, 0, 0)
     frequency = 0.05
     offSetX = 0.0
@@ -130,7 +128,7 @@ async def makeTrajectory(drone, amplitude, direction, missionDuration, takeoffAl
                 globals.positionEast = offSetY + dronePosition.y
                 globals.positionDown = -takeoffAltitude - dronePosition.x
         else:
-            print(elapsed_time)
+            #print(elapsed_time)
             if eightTrajectoryGenerator(amplitude, frequency, elapsed_time, dronePosition) == True:
                 count = count +1
             if(direction == TrajectoryDirection.X):
@@ -173,3 +171,23 @@ async def print_position(drone):
                         string = str(globals.positionNorth) + "," + str(globals.positionEast) + "," + str(globals.positionDown) + "\n"
                         f.write(position.__str__() + "\n")
                         f2.write(string)
+
+async def ensureTakeoffIsCompleted(drone, takeoffAltitude):
+    async for position in drone.telemetry.position():
+        if position.relative_altitude_m >= takeoffAltitude -1:
+            break
+        
+async def print_odometry(drone):
+    async for odometry in drone.telemetry.odometry():
+        print(odometry)
+
+
+async def print_flight_mode(drone):
+    """ Prints the flight mode when it changes """
+
+    previous_flight_mode = None
+
+    async for flight_mode in drone.telemetry.flight_mode():
+        if flight_mode != previous_flight_mode:
+            previous_flight_mode = flight_mode
+            print(f"Flight mode: {flight_mode}")
