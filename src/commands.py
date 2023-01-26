@@ -9,7 +9,7 @@ from cameraOperations import ROSImageViewer
 from mavsdk.offboard import (OffboardError, VelocityNedYaw)
 import globals
 from gazebo_msgs.srv import GetPhysicsProperties
-
+import utils
 class DroneType(Enum):
     
     TARGET = 1
@@ -77,7 +77,7 @@ async def getGroundSpeed(drone):
         return speed
 
 async def setOffBoardMode(drone, takeoffAltitude):
-    await drone.offboard.set_position_ned(PositionNedYaw(0.0, 0.0, -takeoffAltitude, 0))
+    await drone.offboard.set_position_ned(PositionNedYaw(0.0, 0.0, -takeoffAltitude, 2.0))
     print("-- Starting offboard")
     try:
         await drone.offboard.start()
@@ -94,28 +94,32 @@ async def stopOffBoardMode(drone):
     except OffboardError as error:
         print(f"Stopping offboard mode failed with error code: {error._result.result}")
 
-async def makeTrajectory(drone, amplitude, direction, missionDuration, takeoffAltitude):
-    await setOffBoardMode(drone, takeoffAltitude)
+async def makeTrajectory(drone, amplitude, direction, missionDuration, takeoffAltitude, positionX):
     dronePosition = Position(0, 0, 0, 0)
     frequency = 0.05
-    offSetX = 0.0
+    offSetX = positionX
     offSetY = 0.0
     globals.positionEast = offSetY
     globals.positionNorth = offSetX
     globals.positionDown = -takeoffAltitude
-    yaw = 0.0
+    yaw = 5.0
     isFirstCall = True
     if globals.isMultipleVehicle:
         globals.missionStartTime = globals.simulationTime
     else:
         globals.missionStartTime = time.time()
     elapsed_time = 0
-    positionYaw = 300.0
+    positionYaw = 2.0
     print("Mission started")
+    #print("mission start time: {}".format(globals.missionStartTime))
     count = 0
     globals.isTrajectoryStarted = True
     while elapsed_time < missionDuration:
-        #print("Elapsed time: ", elapsed_time)
+        if(globals.missionStartTime == 0):
+            globals.missionStartTime = globals.simulationTime
+        if count == 1:
+            break
+        #print("Elapsed time: {}".format(elapsed_time))
         if isFirstCall:
             isFirstCall = False
             eightTrajectoryGenerator(amplitude, frequency, elapsed_time, dronePosition)
@@ -144,11 +148,10 @@ async def makeTrajectory(drone, amplitude, direction, missionDuration, takeoffAl
         else:
             elapsed_time = time.time() - globals.missionStartTime
         await drone.offboard.set_position_ned(PositionNedYaw(globals.positionNorth, globals.positionEast, globals.positionDown, positionYaw))
-    await stopOffBoardMode(drone)
+    #await stopOffBoardMode(drone)
     globals.isTrajectoryStarted = False
 
 def observeDrone(missionDuration):
-    rospy.init_node('image_viewer')
     viewer = ROSImageViewer(missionDuration)
     rospy.spin()
     print("observation completed")
@@ -177,11 +180,35 @@ async def ensureTakeoffIsCompleted(drone, takeoffAltitude):
         if position.relative_altitude_m >= takeoffAltitude -1:
             break
         
-async def print_odometry(drone):
-    async for odometry in drone.telemetry.odometry():
-        print(odometry)
+async def print_odometry(drone, droneType, count):
+    await asyncio.sleep(1)
+    missionNumber = str(utils.getMissionNumber())
+    if droneType == DroneType.TARGET:
+        with open("../observations/" + missionNumber + "/target" + str(count), "w+") as f:
+            f.truncate()
+            async for odometry in drone.telemetry.odometry():
+                if globals.isSaveToFile:
+                    try:
+                        f.write(odometry.__str__())
+                        f.write("\n")
+                    except Exception as e:
+                        print("An exception occurred : {}".format(e)) 
+                    globals.isSaveToFile = False
+                    break
 
-
+    else:
+        with open("../observations/"+ missionNumber + "/observer", "w+") as f2:
+            f2.truncate()        
+            async for odometry in drone.telemetry.odometry():
+                if globals.isSaveToFile:
+                    try:
+                        f2.write(odometry.__str__())
+                        f2.write("\n")
+                    except Exception as e:
+                        print("An exception occurred : {}".format(e)) 
+                    globals.isSaveToFile = False
+                    break
+                return
 async def print_flight_mode(drone):
     """ Prints the flight mode when it changes """
 
@@ -191,3 +218,6 @@ async def print_flight_mode(drone):
         if flight_mode != previous_flight_mode:
             previous_flight_mode = flight_mode
             print(f"Flight mode: {flight_mode}")
+
+async def moveToInitialPoint(drone):
+    await drone.offboard.set_position_ned(PositionNedYaw(0, 0.0, 0.0, 2.0))

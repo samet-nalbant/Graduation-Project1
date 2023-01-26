@@ -1,5 +1,6 @@
 import numpy as np
 from enum import Enum
+import globals
 class Position:
     def __init__(self, x, y, z, yaw):
         self.x = x
@@ -12,6 +13,7 @@ class TrajectoryDirection(Enum):
     Y = 2    
 TrajectoryDirection = Enum('TrajectoryDirector', ['X', 'Y'])
 
+
 def eightTrajectoryGenerator(amplitude, frequency, timeFromTrajectoryStart, dronePosition):
     theta = 2 * np.pi * frequency * timeFromTrajectoryStart
     dronePosition.x = amplitude * np.sin(theta)
@@ -19,7 +21,11 @@ def eightTrajectoryGenerator(amplitude, frequency, timeFromTrajectoryStart, dron
     #position.z = amplitude * (1 - np.cos(2 * theta))
     dronePosition.yaw = 0
     #print(np.mod(theta, 2 * np.pi))
-    if round(np.mod(theta, 2 * np.pi),4) == 0.0000:
+    #print
+    #print("is tour started: {}".format(globals.tourStarted))
+    if globals.tourStarted == False and round(np.mod(theta, 2 * np.pi)) == 1:
+        globals.tourStarted = True
+    if round(np.mod(theta, 2 * np.pi)) == 0 and globals.tourStarted:
         return True
     else:
         return False
